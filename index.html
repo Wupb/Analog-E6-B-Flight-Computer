@@ -3,12 +3,17 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Analog E6-B Flight Computer 1.0.0</title>
+    <title>Analog E6-B Flight Computer 1.0.1</title>
     <style>
         * {
             margin: 0;
             padding: 0;
         }
+        .grabbing,
+        .grabbing * {
+            cursor: grabbing;
+        }
+
     </style>
 </head>
 
@@ -2084,23 +2089,29 @@
 
         disk.onmousedown = e => {
             rotationOrigin = e;
+            document.body.classList.add("grabbing");
             window.addEventListener("mousemove", trackRotation);
         };
         window.onmouseup = e => {
+            document.body.classList.remove("grabbing");
             window.removeEventListener("mousemove", trackRotation);
         };
         document.body.onmouseleave = e => { // window and document does not support mouseleave event
+            document.body.classList.remove("grabbing");
             window.removeEventListener("mousemove", trackRotation);
         };
 
         disk.ontouchstart = e => {
             rotationOrigin = e.touches[0];
+            document.body.classList.add("grabbing");
             window.addEventListener("touchmove", trackRotation, {passive: false});
         };
         window.ontouchend = e => {
+            document.body.classList.remove("grabbing");
             window.removeEventListener("touchmove", trackRotation, {passive: false});
         };
         window.ontouchcancel = e => {
+            document.body.classList.remove("grabbing");
             window.removeEventListener("touchmove", trackRotation, {passive: false});
         };
     </script>
