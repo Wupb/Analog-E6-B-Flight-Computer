@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Analog E6-B Flight Computer 1.0.1</title>
+    <title>Analog E6-B Flight Computer 1.0.2</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
 
 <body style="position: absolute; width: 100%; height: 100%; overflow: hidden;">
 
-    <svg id="flight-computer" width="100%" height="100%" viewBox="0 0 510 590" style="position: absolute; transform: translate(-50%, -50%); left: 50%; top: 50%;">
+    <svg id="flight-computer" width="95%" height="95%" viewBox="0 0 510 590" style="position: absolute; transform: translate(-50%, -50%); left: 50%; top: 50%;">
 
         <g id="base" style="cursor: move;">
             <g id="base-embellishment">
@@ -2027,20 +2027,29 @@
             disk.centerY = rect.top + rect.height / 2;
         }
         disk.updateCenter();
+        
+        // Replace the svg's top and left style (which is initially a percent) with the center numeric value (so it can be changed dynamically later).
+        let bodyRect = document.body.getBoundingClientRect();
+        fc.style.top = bodyRect.height / 2 + "px";
+        fc.style.left = bodyRect.width / 2 + "px";
+
+        // Remove the svg's width attribute and update the height attribute because the only the height attribute will reflect the element size
+        fc.setAttribute('height', base.getBoundingClientRect().height * 0.95);
+        fc.removeAttribute('width');
 
         // Allow zoom via scroll wheel by changing the svg height
         window.onwheel = e => {
-            let scale = 1 - (event.deltaY / 4000)
-            if (scale < 1 && fc.height.baseVal.value > 250)
-                fc.height.baseVal.value *= scale;
-            if (scale > 1 && fc.height.baseVal.value < 2500)
-                fc.height.baseVal.value *= scale;
+            switch (Math.sign(event.deltaY)) {
+                case -1: // Scroll up/zoom in
+                    if (base.getBoundingClientRect().width < 1.5 * document.body.getBoundingClientRect().width)
+                        fc.height.baseVal.value *= 1.05;
+                    break;
+                case 1: // Scroll down/zoom out
+                    if (fc.height.baseVal.value > 250)
+                        fc.height.baseVal.value *= 0.95;
+                    break;
+            }
         };
-
-        // Replace the svg top and left style (which is initially a percent) with the center numeric value (so it can be changed dynamically later).
-        let bodyRect = document.body.getBoundingClientRect();
-        fc.style.top = bodyRect.height / 2;
-        fc.style.left = bodyRect.width / 2;
 
         // Setup the drag move function
         var moveOrigin;
@@ -2049,8 +2058,8 @@
             let deltaY = e.clientY - moveOrigin.clientY;
             let x = parseFloat(fc.style.left);
             let y = parseFloat(fc.style.top);
-            fc.style.top = clamp(y + deltaY, 0, document.body.clientHeight);
-            fc.style.left = clamp(x +  deltaX, 0, document.body.clientWidth);
+            fc.style.top = clamp(y + deltaY, 0, document.body.clientHeight) + "px"; // clamp() to prevent the fc from moving completely off screen
+            fc.style.left = clamp(x +  deltaX, 0, document.body.clientWidth) + "px";
 
             disk.updateCenter();
             moveOrigin = e;
@@ -2071,7 +2080,7 @@
         var rotationOrigin;
         var trackRotation = e => {
             if (e.touches) {
-                if (e.path.includes(disk)) {
+                if (e.path.includes(disk)) { // Prevent pan and zoom gestures
                     e.preventDefault();
                 }
                 e = e.touches[0];
